@@ -13,7 +13,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "blocks")
+@Table(name = "blocks", indexes = {
+    @Index(name = "idx_block_index", columnList = "index")
+})
 public class Block {
 
     @Id

@@ -15,20 +15,22 @@ public interface UserSessionRepository extends JpaRepository<UserSession, Long> 
 
     Optional<UserSession> findByToken(String token);
 
-    @Query("SELECT COUNT(s) > 0 FROM UserSession s WHERE s.token = :token AND s.revoked = false")
-    boolean isTokenActive(@Param("token") String token);
+    /** Uses index on token column — result cached in JwtFilter via CacheConfig.TOKEN_ACTIVE */
+    @Query("SELECT COUNT(s) > 0 FROM UserSession s WHERE s.token = :token AND s.revoked = false AND s.expiresAt > :now")
+    boolean isTokenActive(@Param("token") String token, @Param("now") LocalDateTime now);
 
     @Modifying
     @Transactional
-    @Query("UPDATE UserSession s SET s.revoked = true WHERE s.user.id = :userId")
+    @Query("UPDATE UserSession s SET s.revoked = true WHERE s.user.id = :userId AND s.revoked = false")
     void revokeAllUserSessions(@Param("userId") Long userId);
 
-    /**
-     * True if user has ANY session (active or revoked) created on or after the
-     * start of today — used to skip OTP on repeat logins within the same day.
-     */
     @Query("SELECT COUNT(s) > 0 FROM UserSession s WHERE s.user.id = :userId AND s.createdAt >= :startOfDay")
     boolean hasSessionCreatedToday(@Param("userId") Long userId, @Param("startOfDay") LocalDateTime startOfDay);
 
     boolean existsByUserId(Long userId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM UserSession s WHERE s.expiresAt < :now AND s.revoked = true")
+    int deleteExpiredSessions(@Param("now") LocalDateTime now);
 }

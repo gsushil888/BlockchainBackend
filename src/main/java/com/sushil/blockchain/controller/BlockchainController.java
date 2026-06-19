@@ -8,13 +8,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @RestController
@@ -25,38 +28,40 @@ public class BlockchainController {
     private final BlockchainService blockchainService;
 
     @GetMapping("/chain")
-    public ResponseEntity<ApiResponse<List<Block>>> getChain(HttpServletRequest req) {
-        List<Block> chain = blockchainService.getChain();
-        return ResponseEntity.ok(ApiResponse.success(chain, "OK", HttpStatus.OK, req.getRequestURI()));
+    public ResponseEntity<ApiResponse<Page<Block>>> getChain(
+            @PageableDefault(size = 50, sort = "index") Pageable pageable,
+            HttpServletRequest req) {
+        return ResponseEntity.ok(ApiResponse.success(
+                blockchainService.getChain(pageable), "OK", HttpStatus.OK, req.getRequestURI()));
     }
 
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<ChainStats>> getStats(HttpServletRequest req) {
-        ChainStats stats = blockchainService.stats();
-        return ResponseEntity.ok(ApiResponse.success(stats, "OK", HttpStatus.OK, req.getRequestURI()));
+        return ResponseEntity.ok(ApiResponse.success(
+                blockchainService.stats(), "OK", HttpStatus.OK, req.getRequestURI()));
     }
 
     @GetMapping("/block/{index}")
     public ResponseEntity<ApiResponse<Block>> getBlock(@PathVariable int index, HttpServletRequest req) {
-        Block block = blockchainService.getByIndex(index);
-        return ResponseEntity.ok(ApiResponse.success(block, "OK", HttpStatus.OK, req.getRequestURI()));
+        return ResponseEntity.ok(ApiResponse.success(
+                blockchainService.getByIndex(index), "OK", HttpStatus.OK, req.getRequestURI()));
     }
 
+    /** Returns immediately with 202 ACCEPTED while mining runs async on taskExecutor. */
     @PostMapping("/mine")
-    public ResponseEntity<ApiResponse<Block>> mine(
+    public CompletableFuture<ResponseEntity<ApiResponse<Block>>> mine(
             @Valid @RequestBody MineBlockRequest body,
             @AuthenticationPrincipal UserDetails user,
             HttpServletRequest req) {
-
         log.info("[BLOCKCHAIN] Mine requested by user={}", user.getUsername());
-        Block block = blockchainService.mineNext(body, user.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(block, "Block mined successfully", HttpStatus.CREATED, req.getRequestURI()));
+        return blockchainService.mineNext(body, user.getUsername())
+                .thenApply(block -> ResponseEntity.status(HttpStatus.CREATED)
+                        .body(ApiResponse.success(block, "Block mined successfully", HttpStatus.CREATED, req.getRequestURI())));
     }
 
     @GetMapping("/verify")
     public ResponseEntity<ApiResponse<VerifyResult>> verify(HttpServletRequest req) {
-        VerifyResult result = blockchainService.verify();
-        return ResponseEntity.ok(ApiResponse.success(result, "OK", HttpStatus.OK, req.getRequestURI()));
+        return ResponseEntity.ok(ApiResponse.success(
+                blockchainService.verify(), "OK", HttpStatus.OK, req.getRequestURI()));
     }
 }

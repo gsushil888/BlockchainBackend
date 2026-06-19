@@ -12,7 +12,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "doc_records")
+@Table(name = "doc_records", indexes = {
+    @Index(name = "idx_doc_sha256",      columnList = "sha256Hash"),
+    @Index(name = "idx_doc_uploaded_by", columnList = "uploadedBy")
+})
 public class DocRecord {
 
     @Id
