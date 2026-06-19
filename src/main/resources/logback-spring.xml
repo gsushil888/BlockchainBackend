@@ -51,49 +51,6 @@
         </encoder>
     </appender>
 
-    <!-- ── Per-Package Log Levels ────────────────────────────────────────── -->
-
-    <logger name="com.sushil.filter" level="INFO" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE_CRYPTO"/>
-    </logger>
-
-    <logger name="com.sushil.interceptor" level="INFO" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE_CRYPTO"/>
-    </logger>
-
-    <logger name="com.sushil.aspect" level="INFO" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE_APP"/>
-    </logger>
-
-    <logger name="com.sushil.controller" level="INFO" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE_APP"/>
-    </logger>
-
-    <logger name="com.sushil.service" level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE_APP"/>
-    </logger>
-
-    <logger name="com.sushil.security" level="INFO" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE_APP"/>
-    </logger>
-
-    <logger name="org.springframework.security" level="WARN"/>
-
-    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE_APP"/>
-    </logger>
-
-    <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
-        <appender-ref ref="FILE_APP"/>
-    </logger>
-
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE_APP"/>
